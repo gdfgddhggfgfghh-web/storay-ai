@@ -2,13 +2,13 @@ name: Run Storyteller Bot 24/7
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'  # Runs every 6 hours
+  repository_dispatch:
+    types: [keepalive_trigger]
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 350 # 5h 50m to restart before GitHub's 6h limit
+    timeout-minutes: 360 # 6 hours max (Safety net)
 
     steps:
     - name: Checkout Repository
@@ -17,16 +17,20 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11' 
+        python-version: '3.11'
 
     - name: Install Dependencies
       run: |
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip
+        pip install requests
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Run Bot
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         DB_CHANNEL_ID: ${{ secrets.DB_CHANNEL_ID }}
+        GH_PAT: ${{ secrets.GH_PAT }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        python bot.py
+        python -u bot.py
