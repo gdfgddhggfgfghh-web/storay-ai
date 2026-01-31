@@ -1,0 +1,23 @@
+name: Infinite Loop Manager (Advanced)
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [loop_trigger]
+    
+jobs:
+  loop-manager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340 # 5 hours 40 minutes (Safe buffer)
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Run Infinite Loop Manager (PowerShell)
+        shell: pwsh
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          # Pass other secrets if needed by your script via loop_bot.ps1 logic
+        run: |
+          ./loop_bot.ps1
